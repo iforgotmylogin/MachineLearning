@@ -1,91 +1,86 @@
 import random
 
-# Set the database path globally
-def setDatabase(path):
-    global dataPath
-    dataPath = path
+class PreProccesor:
+    def __init__(self):
+        self.dataPath = None
+        self.num_folds = None 
 
-# Import and process the data
-def importData():
-    # Determine line count (number of samples)
-    with open(dataPath, "r") as f:
-        lineCount = sum(1 for _ in f)  # Count the number of lines
+    def setDatabase(self, path):
+        self.dataPath = path
 
-    # Initialize raw data
-    rawData = [[0] * 11 for _ in range(lineCount)]
+    def importData(self):
+        if not self.dataPath:
+            raise ValueError("Data path is not set.")
 
-    # Read the file and populate rawData
-    with open(dataPath, "r") as f:
-        for i, line in enumerate(f):
-            data = line.strip().split(",")  # Strip and split the line by comma
-            for j in range(len(data)):
-                rawData[i][j] = int(data[j]) if data[j].isdigit() else 0  # Replace "?" with 0
-    
-    print("Data importation complete.")
+        # Determine line count (number of samples)
+        with open(self.dataPath, "r") as f:
+            lineCount = sum(1 for _ in f)  # Count the number of lines
 
-    # Shuffle the raw data
-    random.shuffle(rawData)
+        # Initialize raw data
+        rawData = [[0] * 11 for _ in range(lineCount)]
 
-    # Initialize positive and negative arrays
-    rawPos = []
-    rawNeg = []
+        # Read the file and populate rawData
+        with open(self.dataPath, "r") as f:
+            for i, line in enumerate(f):
+                data = line.strip().split(",")  # Strip and split the line by comma
+                for j in range(len(data)):
+                    rawData[i][j] = int(data[j]) if data[j].isdigit() else 0  # Replace "?" with 0
 
-    # Split data into positive and negative categories
-    for sample in rawData:
-        if sample[10] == 2:
-            rawNeg.append(sample)  # Negative class (2)
-        elif sample[10] == 4:
-            rawPos.append(sample)  # Positive class (4)
+        print("Data importation complete.")
 
-    posCount = len(rawPos)
-    negCount = len(rawNeg)
+        # Shuffle the raw data
+        random.shuffle(rawData)
 
-    print("pos / neg splitting complete")
-    return rawPos, rawNeg, posCount, negCount
+        # Initialize positive and negative arrays
+        rawPos = []
+        rawNeg = []
 
-# Perform k-fold splitting
-def createFolds(rawPos, rawNeg, posCount, negCount, num_folds=10):
-    # Initialize folds
-    folds = [[] for _ in range(num_folds)]
+        # Split data into positive and negative categories
+        for sample in rawData:
+            if sample[10] == 2:
+                rawNeg.append(sample)  # Negative class (2)
+            elif sample[10] == 4:
+                rawPos.append(sample)  # Positive class (4)
 
-    # Calculate the number of samples per fold
-    pos_samples_per_fold = (posCount // num_folds) + 1
-    neg_samples_per_fold = (negCount // num_folds) + 1
+        posCount = len(rawPos)
+        negCount = len(rawNeg)
 
-    # Populate the folds
-    for fold_index in range(num_folds):
-        start_pos = fold_index * pos_samples_per_fold
-        end_pos = min(start_pos + pos_samples_per_fold, posCount)
-        start_neg = fold_index * neg_samples_per_fold
-        end_neg = min(start_neg + neg_samples_per_fold, negCount)
+        print("pos / neg splitting complete")
+        return rawPos, rawNeg, posCount, negCount
 
-        # Add positive samples to the current fold
-        for i in range(start_pos, end_pos):
-            folds[fold_index].append(rawPos[i])
+    def createFolds(self, rawPos, rawNeg, posCount, negCount, num_folds=10):
+        self.num_folds = num_folds
+        # Initialize folds
+        folds = [[] for _ in range(num_folds)]
 
-        # Add negative samples to the current fold
-        for i in range(start_neg, end_neg):
-            folds[fold_index].append(rawNeg[i])
+        # Calculate the number of samples per fold
+        pos_samples_per_fold = posCount // num_folds
+        neg_samples_per_fold = negCount // num_folds
 
-    # Return the folds instead of printing them
-    return folds
+        # Populate the folds
+        for fold_index in range(num_folds):
+            start_pos = fold_index * pos_samples_per_fold
+            end_pos = min(start_pos + pos_samples_per_fold, posCount)
+            start_neg = fold_index * neg_samples_per_fold
+            end_neg = min(start_neg + neg_samples_per_fold, negCount)
 
-# Main function
-def main():
-    setDatabase("data/breast-cancer-wisconsin.data")
-    
-    # Import the data
-    rawPos, rawNeg, posCount, negCount = importData()
+            # Add positive samples to the current fold
+            for i in range(start_pos, end_pos):
+                folds[fold_index].append(rawPos[i])
 
-    # Create the folds
-    folds = createFolds(rawPos, rawNeg, posCount, negCount, num_folds=10)
+            # Add negative samples to the current fold
+            for i in range(start_neg, end_neg):
+                folds[fold_index].append(rawNeg[i])
 
-    # Now you can print or further process the folds as needed
-    for i, fold in enumerate(folds):
-        print(f"Fold {i + 1}:")
-        for sample in fold:
-            print(sample)
-        print("-----------------------")
+            for fold in folds:  # Mix pos and neg elements together in fold
+                random.shuffle(fold)
 
-if __name__ == "__main__":
-    main()
+        # Return the folds
+        return folds
+
+    def generateNoise(self, folds):
+        for fold in folds:
+            for sample in fold:
+                sublist = sample[1:10]  # Extract the sublist from index 1 to 9
+                random.shuffle(sublist)  # Shuffle the sublist
+                sample[1:10] = sublist  # Reassign the shuffled sublist back to the sample
