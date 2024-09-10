@@ -81,6 +81,17 @@ class PreProccesor:
     def generateNoise(self, folds):
         for fold in folds:
             for sample in fold:
-                sublist = sample[1:10]  # Extract the sublist from index 1 to 9
-                random.shuffle(sublist)  # Shuffle the sublist
-                sample[1:10] = sublist  # Reassign the shuffled sublist back to the sample
+                # Determine the number of features to shuffle (10% of the total features)
+                num_features_to_shuffle = max(1, int(0.1 * len(sample)))  # Ensure at least one feature is shuffled
+                
+                # Select random indices to shuffle
+                indices_to_shuffle = random.sample(range(len(sample)), num_features_to_shuffle)
+                
+                # Shuffle the selected features
+                for index in indices_to_shuffle:
+                    sublist = [fold[i][index] for i in range(len(fold))]  # Extract the feature column
+                    random.shuffle(sublist)  # Shuffle the feature values
+                    
+                    # Reassign the shuffled values back to the fold
+                    for i in range(len(fold)):
+                        fold[i][index] = sublist[i]
