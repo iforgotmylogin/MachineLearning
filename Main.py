@@ -5,12 +5,12 @@ from PreProccessor import PreProccesor
 def main():
     preProccesor = PreProccesor()
 
-    preProccesor.setDatabase("MachineLearning/data/breast-cancer-wisconsin.data")
+    preProccesor.setDatabase("data/breast-cancer-wisconsin.data")
     #preProccesor.createFolds(10)
 
     rawPos, rawNeg, posCount, negCount = preProccesor.importData()
 
-    folds = preProccesor.createFolds(rawPos, rawNeg, posCount, negCount, num_folds=10) #create folds for cross validation
+    folds = preProccesor.createFolds(rawPos, rawNeg, posCount, negCount, 10) #create folds for cross validation
 
     accuracies = []
 
