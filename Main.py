@@ -5,7 +5,7 @@ from PreProccessor import PreProccesor
 def main():
     preprocessor = PreProccesor()
 
-    preprocessor.setDatabase("data/breast-cancer-wisconsin.data")
+    preprocessor.setDatabase("data/house-votes-84 (1).data")
 
     rawPos, rawNeg, posCount, negCount = preprocessor.importData()
     folds = preprocessor.createFolds(rawPos, rawNeg, posCount, negCount, 10)

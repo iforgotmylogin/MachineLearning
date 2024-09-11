@@ -4,6 +4,9 @@ class NaiveBayes:
 
     # Taking all the features into account and training the model
     def fit(self, X, y):
+
+        if len(X.shape) == 1:
+            X = X.reshape(-1, 1)
         numSamples, numFeatures = X.shape
         self.classes = np.unique(y)
         numClasses = len(self.classes)
