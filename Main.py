@@ -5,7 +5,7 @@ from PreProccessor import PreProccesor
 def main():
     preprocessor = PreProccesor()
 
-    preprocessor.setDatabase("data/breast-cancer-wisconsin.data")
+    preprocessor.setDatabase("data/house-votes-84 (1).data")
 
     rawPos, rawNeg, posCount, negCount = preprocessor.importData()
     folds = preprocessor.createFolds(rawPos, rawNeg, posCount, negCount, 10)
@@ -54,6 +54,7 @@ def cross_validate(folds, preprocessor):
 
         # Calculate accuracy
         accuracy = np.mean(y_pred == y_test)
+        #print(y_pred)
 
         
         accuracies.append(accuracy)
@@ -64,7 +65,9 @@ def cross_validate(folds, preprocessor):
     return accuracies, entropys
 
 def entropyLoss(y_actual, y_predict):
-    loss = np.sum(y_actual *np.log(y_predict)/y_actual.shape[0])
+    epsilon = 1e-15
+    y_predict = np.clip(y_predict, epsilon, 1 - epsilon)
+    loss = np.sum(y_actual * np.log(y_predict) / y_actual.shape[0])
     return loss
 
 
