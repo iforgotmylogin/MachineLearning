@@ -1,19 +1,18 @@
 import numpy as np
 from NaiveBayes import NaiveBayes
-from PreProccessor import PreProccesor
+from PreProccessor import PreProcessor
 
 def main():
-    preprocessor = PreProccesor()
+    preprocessor = PreProcessor()
 
-    preprocessor.setDatabase("data/house-votes-84 (1).data")
+    preprocessor.setDatabase("data/iris.data")
 
-    rawPos, rawNeg, posCount, negCount = preprocessor.importData()
-    folds = preprocessor.createFolds(rawPos, rawNeg, posCount, negCount, 10)
+    rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount = preprocessor.importData()
+    folds = preprocessor.createFolds( rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount, 10)
 
     print("Cross-validation without noise:")
     accuracies_without_noise, entropies_without_noise = cross_validate(folds, preprocessor)
 
-    print(f"Average Accuracy without noise: {np.mean(accuracies_without_noise)}")
     print(f"Average Entropy Loss without noise: {np.mean(entropies_without_noise)}")
 
     # Introduce noise
@@ -39,10 +38,10 @@ def cross_validate(folds, preprocessor):
         train_folds = [folds[j] for j in range(preprocessor.num_folds) if j != i]
         train_data = [sample for fold in train_folds for sample in fold]
 
-        X_train = np.array([sample[:10] for sample in train_data])
-        y_train = np.array([sample[10] for sample in train_data])
-        X_test = np.array([sample[:10] for sample in test_fold])
-        y_test = np.array([sample[10] for sample in test_fold])
+        X_train = np.array([sample[:4] for sample in train_data])
+        y_train = np.array([sample[4] for sample in train_data])
+        X_test = np.array([sample[:4] for sample in test_fold])
+        y_test = np.array([sample[4] for sample in test_fold])
 
         model = NaiveBayes()
         model.fit(X_train, y_train)

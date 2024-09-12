@@ -1,6 +1,6 @@
 import random
 
-class PreProccesor:
+class PreProcessor:
     def __init__(self):
         self.dataPath = None
         self.num_folds = None 
@@ -17,7 +17,6 @@ class PreProccesor:
             lineCount = sum(1 for _ in f)  # Count the number of lines
 
         # Initialize raw data
-        # rawData = [[0] * 11 for _ in range(lineCount)]
         rawData = []
 
         # Read the file and populate rawData
@@ -25,55 +24,52 @@ class PreProccesor:
             for i, line in enumerate(f):
                 data = line.strip().split(",")  # Strip and split the line by comma
                 proline = []
+               
                 for val in data:
-                    if val == '?':
-                        proline.append(0)
-                        #print("Added ?")
-                    elif val == 'y':
-                        proline.append(1)
-                        #print("Added y")
-                    elif val == 'n':
-                        proline.append(0)
-                        #print("Added n")
-                    elif val == 'republican':
+                    if val == 'Iris-setosa':
                         proline.append(2)
-                        #print("Added REp 2")
-                    elif val == 'democrat':
+                    elif val == 'Iris-versicolor':
                         proline.append(4)
-                        #print("Added DEM 4")
+                    elif val == 'Iris-virginica':
+                        proline.append(6)
+                    elif val == '':
+                        next
+                        #do nothing to remove blanks
+                    else:
+                        proline.append(float(val))  # For non-label values, append the original value
                 rawData.append(proline)
-
-                #print(rawData)
-                # for j in range(len(data)):
-                #     rawData[i][j] = int(data[j]) if data[j].isdigit() else 0  # Replace "?" with 0
 
         print("Data importation complete.")
 
         # Shuffle the raw data
         random.shuffle(rawData)
 
-        # Initialize positive and negative arrays
+        # Initialize class arrays
         rawPos = []
         rawNeg = []
-
-        # Split data into positive and negative categories
+        rawNeutral = []  # New class list
+        print(rawData)  
+        # Split data into classes
         for sample in rawData:
-            if sample[0] == 2:
-                rawNeg.append(sample)  # Negative class 
-                #print ("REP")
-            elif sample[0] == 4:
-                rawPos.append(sample)  # Positive class 
-                #print ("DEM")
-            #else:
-                #print("FUCK")
+            print(sample)
+            if len(sample) <= 4:
+             print("Faulty sample:", sample)
+   
+            elif sample[4] == 2:
+                rawNeg.append(sample)  # Negative class
+            elif sample[4] == 4:
+                rawPos.append(sample)  # Positive class
+            elif sample[4] == 6:
+                rawNeutral.append(sample)  # Neutral class
 
         posCount = len(rawPos)
         negCount = len(rawNeg)
+        neutralCount = len(rawNeutral)  # New class count
 
-        print("pos / neg splitting complete")
-        return rawPos, rawNeg, posCount, negCount
+        print("Class splitting complete")
+        return rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount
 
-    def createFolds(self, rawPos, rawNeg, posCount, negCount, num_folds=10):
+    def createFolds(self, rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount, num_folds=10):
         self.num_folds = num_folds
         # Initialize folds
         folds = [[] for _ in range(num_folds)]
@@ -81,6 +77,7 @@ class PreProccesor:
         # Calculate the number of samples per fold
         pos_samples_per_fold = posCount // num_folds
         neg_samples_per_fold = negCount // num_folds
+        neutral_samples_per_fold = neutralCount // num_folds  # New class fold calculation
 
         # Populate the folds
         for fold_index in range(num_folds):
@@ -88,16 +85,20 @@ class PreProccesor:
             end_pos = min(start_pos + pos_samples_per_fold, posCount)
             start_neg = fold_index * neg_samples_per_fold
             end_neg = min(start_neg + neg_samples_per_fold, negCount)
+            start_neutral = fold_index * neutral_samples_per_fold
+            end_neutral = min(start_neutral + neutral_samples_per_fold, neutralCount)
 
-            # Add positive samples to the current fold
+            # Add samples to the current fold
             for i in range(start_pos, end_pos):
                 folds[fold_index].append(rawPos[i])
 
-            # Add negative samples to the current fold
             for i in range(start_neg, end_neg):
                 folds[fold_index].append(rawNeg[i])
 
-            for fold in folds:  # Mix pos and neg elements together in fold
+            for i in range(start_neutral, end_neutral):
+                folds[fold_index].append(rawNeutral[i])
+
+            for fold in folds:  # Mix samples together in fold
                 random.shuffle(fold)
 
         # Return the folds
@@ -119,4 +120,4 @@ class PreProccesor:
                     
                     # Reassign the shuffled values back to the fold
                     for i in range(len(fold)):
-                        fold[i][index] = sublist[i]
+                        fold[i][index] = sublist[i]  # Fix typo: 'I' -> 'i'
