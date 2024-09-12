@@ -5,10 +5,10 @@ from PreProccessor import PreProcessor
 def main():
     preprocessor = PreProcessor()
 
-    preprocessor.setDatabase("data/iris.data")
+    preprocessor.setDatabase("data/soybean-small.data")
 
-    rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount = preprocessor.importData()
-    folds = preprocessor.createFolds( rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount, 10)
+    rawPos, rawNeg, rawNeutral, rawOther, posCount, negCount, neutralCount , otherCount = preprocessor.importData()
+    folds = preprocessor.createFolds(rawPos, rawNeg, rawNeutral, rawOther, posCount, negCount, neutralCount , otherCount, 10)
 
     print("Cross-validation without noise:")
     accuracies_without_noise, entropies_without_noise = cross_validate(folds, preprocessor)

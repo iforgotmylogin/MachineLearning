@@ -26,12 +26,14 @@ class PreProcessor:
                 proline = []
                
                 for val in data:
-                    if val == 'Iris-setosa':
+                    if val == 'D1':
                         proline.append(2)
-                    elif val == 'Iris-versicolor':
+                    elif val == 'D2':
                         proline.append(4)
-                    elif val == 'Iris-virginica':
+                    elif val == 'D3':
                         proline.append(6)
+                    elif val == 'D4':
+                        proline.append(8)
                     elif val == '':
                         next
                         #do nothing to remove blanks
@@ -48,6 +50,7 @@ class PreProcessor:
         rawPos = []
         rawNeg = []
         rawNeutral = []  # New class list
+        rawOther = []  # New class list
         print(rawData)  
         # Split data into classes
         for sample in rawData:
@@ -55,21 +58,24 @@ class PreProcessor:
             if len(sample) <= 4:
              print("Faulty sample:", sample)
    
-            elif sample[4] == 2:
+            elif sample[35] == 2:
                 rawNeg.append(sample)  # Negative class
-            elif sample[4] == 4:
+            elif sample[35] == 4:
                 rawPos.append(sample)  # Positive class
-            elif sample[4] == 6:
+            elif sample[35] == 6:
                 rawNeutral.append(sample)  # Neutral class
+            elif sample[35] == 8:
+                rawOther.append(sample)  # Other class
 
         posCount = len(rawPos)
         negCount = len(rawNeg)
-        neutralCount = len(rawNeutral)  # New class count
+        neutralCount = len(rawNeutral)
+        otherCount = len(rawOther)
 
         print("Class splitting complete")
-        return rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount
+        return rawPos, rawNeg, rawNeutral, rawOther, posCount, negCount, neutralCount , otherCount
 
-    def createFolds(self, rawPos, rawNeg, rawNeutral, posCount, negCount, neutralCount, num_folds=10):
+    def createFolds(self, rawPos, rawNeg, rawNeutral, rawOther, posCount, negCount, neutralCount , otherCount, num_folds=10):
         self.num_folds = num_folds
         # Initialize folds
         folds = [[] for _ in range(num_folds)]
@@ -78,7 +84,7 @@ class PreProcessor:
         pos_samples_per_fold = posCount // num_folds
         neg_samples_per_fold = negCount // num_folds
         neutral_samples_per_fold = neutralCount // num_folds  # New class fold calculation
-
+        other_samples_per_fold = otherCount // num_folds
         # Populate the folds
         for fold_index in range(num_folds):
             start_pos = fold_index * pos_samples_per_fold
@@ -87,6 +93,9 @@ class PreProcessor:
             end_neg = min(start_neg + neg_samples_per_fold, negCount)
             start_neutral = fold_index * neutral_samples_per_fold
             end_neutral = min(start_neutral + neutral_samples_per_fold, neutralCount)
+
+            start_other = fold_index * other_samples_per_fold
+            end_other = min(start_other + other_samples_per_fold, otherCount)
 
             # Add samples to the current fold
             for i in range(start_pos, end_pos):
@@ -97,6 +106,9 @@ class PreProcessor:
 
             for i in range(start_neutral, end_neutral):
                 folds[fold_index].append(rawNeutral[i])
+            
+            for i in range(start_other, end_other):
+                folds[fold_index].append(rawOther[i])
 
             for fold in folds:  # Mix samples together in fold
                 random.shuffle(fold)
