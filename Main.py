@@ -6,14 +6,15 @@ def main():
     preprocessor = PreProcessor()
 
     # Set the dataset path (adjust this according to your dataset)
-    preprocessor.setDatabase("data/glass.data")  # Adjust the path as necessary
+    preprocessor.setDatabase("data/iris.data")  
 
     # Import and process the data
     raw_data = preprocessor.importData()
     cleaned_data = preprocessor.cleanData(raw_data)
     
     # Stratify and get class counts
-    label_index = -1  # Assuming the last column contains the class labels
+    label_index = -1  # use for most data sets 
+    #label_index = 0  # use for house votes
     class_dict, posCount, negCount, neutralCount, otherCount = preprocessor.stratifiedSplit(cleaned_data, label_index)
 
     # Create 10 stratified folds
@@ -21,25 +22,25 @@ def main():
 
     #TODO ----------------------------------------------change after this point to impliment KNN
     
-    # Display cross-validation results without noise
-    print("Cross-validation without noise:")
-    accuracies_without_noise, entropies_without_noise = cross_validate(folds, preprocessor)
+    # # Display cross-validation results without noise
+    # print("Cross-validation without noise:")
+    # accuracies_without_noise, entropies_without_noise = cross_validate(folds, preprocessor)
 
-    print(f"Average Entropy Loss without noise: {np.mean(entropies_without_noise)}")
-    print(f"Average Accuracy without noise: {np.mean(accuracies_without_noise)}")
+    # print(f"Average Entropy Loss without noise: {np.mean(entropies_without_noise)}")
+    # print(f"Average Accuracy without noise: {np.mean(accuracies_without_noise)}")
 
-    # Introduce noise into the dataset
-    preprocessor.generateNoise(folds)
+    # # Introduce noise into the dataset
+    # preprocessor.generateNoise(folds)
 
-    # Display the data after noise introduction (showing the first 5 samples of the first fold)
-    print("Data after noise introduction (first fold sample):", folds[0][:5])
+    # # Display the data after noise introduction (showing the first 5 samples of the first fold)
+    # print("Data after noise introduction (first fold sample):", folds[0][:5])
 
-    # Display cross-validation results with noise
-    print("Cross-validation with noise:")
-    accuracies_with_noise, entropies_with_noise = cross_validate(folds, preprocessor)
+    # # Display cross-validation results with noise
+    # print("Cross-validation with noise:")
+    # accuracies_with_noise, entropies_with_noise = cross_validate(folds, preprocessor)
 
-    print(f"Average Accuracy with noise: {np.mean(accuracies_with_noise)}")
-    print(f"Average Entropy Loss with noise: {np.mean(entropies_with_noise)}")
+    # print(f"Average Accuracy with noise: {np.mean(accuracies_with_noise)}")
+    # print(f"Average Entropy Loss with noise: {np.mean(entropies_with_noise)}")
 
 def cross_validate(folds, preprocessor):
     accuracies = []

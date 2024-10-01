@@ -18,7 +18,7 @@ class PreProcessor:
         with open(self.dataPath, "r") as f:
             for line in f:
                 data = line.strip().split(",")
-                proline = [float(val) if val != '' else None for val in data]
+                proline = [float(val) if val not in ('', '?' ,'n','y') else (-1 if val == '?' else 0 if val == 'n' else 1 if val == 'y' else None) for val in data] #change this line to effect how ? is handled 
                 rawData.append(proline)
 
         print("Data importation complete.")
@@ -34,15 +34,16 @@ class PreProcessor:
         for sample in cleanedData:
             classDict[sample[label_index]].append(sample)
 
-        posCount = len(classDict[2])
-        negCount = len(classDict[4])
-        neutralCount = len(classDict[6])
-        otherCount = len(classDict[8])
+        #change what the class lables are here
+        posCount = len(classDict[1])
+        negCount = len(classDict[0])
+        neutralCount = len(classDict[10])
+        otherCount = len(classDict[11])
 
         print(f"Class counts: pos={posCount}, neg={negCount}, neutral={neutralCount}, other={otherCount}")
         return classDict, posCount, negCount, neutralCount, otherCount
 
-    def createFolds(self, classDict, num_folds=10):
+    def createFolds(self, classDict, num_folds=11):
         self.num_folds = num_folds
         folds = [[] for _ in range(num_folds)]
 

@@ -75,8 +75,8 @@
           17:  28
 
 9. Class Distribution: (2 classes)
-   1. 45.2 percent are democrat
-   2. 54.8 percent are republican
+   1. 45.2 percent are democrat 0
+   2. 54.8 percent are republican 1
 
 Class predictiveness and predictability: Pr(C|A=V) and Pr(A=V|C)
  Attribute 1: (A = handicapped-infants)
