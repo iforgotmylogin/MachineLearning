@@ -2,10 +2,12 @@ import numpy as np
 from NaiveBayes import NaiveBayes
 from PreProccessor import PreProccesor
 
+#hot encoding
+
 def main():
     preprocessor = PreProccesor()
 
-    preprocessor.setDatabase("data/house-votes-84 (1).data")
+    preprocessor.setDatabase("data/glass.data")
 
     rawPos, rawNeg, posCount, negCount = preprocessor.importData()
     folds = preprocessor.createFolds(rawPos, rawNeg, posCount, negCount, 10)
@@ -29,7 +31,6 @@ def main():
     print(f"Average Entropy Loss with noise: {np.mean(entropies_with_noise)}")
 
 
-
 def cross_validate(folds, preprocessor):
     accuracies = []
     entropys = []
@@ -49,13 +50,12 @@ def cross_validate(folds, preprocessor):
 
         y_pred = model.predict(X_test)
 
-          # Calculate entropy loss function
-        elf = entropyLoss(y_test,y_pred)
+        # Calculate entropy loss function
+        elf = entropyLoss(y_test, y_pred)
 
         # Calculate accuracy
         accuracy = np.mean(y_pred == y_test)
 
-        
         accuracies.append(accuracy)
         entropys.append(elf)
         print(f"Fold {i + 1} Entropy loss: {elf}")
@@ -63,8 +63,9 @@ def cross_validate(folds, preprocessor):
 
     return accuracies, entropys
 
+
 def entropyLoss(y_actual, y_predict):
-    loss = np.sum(y_actual *np.log(y_predict)/y_actual.shape[0])
+    loss = np.sum(y_actual * np.log(y_predict) / y_actual.shape[0])
     return loss
 
 

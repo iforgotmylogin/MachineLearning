@@ -1,12 +1,11 @@
 import numpy as np
 
+
 class NaiveBayes:
 
     # Taking all the features into account and training the model
     def fit(self, X, y):
-
-        if len(X.shape) == 1:
-            X = X.reshape(-1, 1)
+        print(X.shape)
         numSamples, numFeatures = X.shape
         self.classes = np.unique(y)
         numClasses = len(self.classes)
@@ -16,16 +15,16 @@ class NaiveBayes:
         self.prior = np.zeros(numClasses, dtype=np.float64)
 
         for idx, c in enumerate(self.classes):
-            X_c = X[y==c]
+            X_c = X[y == c]
             self.mean[idx, :] = X_c.mean(axis=0)
-            self.var[idx, :] = X_c.var(axis=0) + 1e-9 # Adding smoothing here as well to keep accuracy
+            self.var[idx, :] = X_c.var(axis=0) + 1e-9  # Adding smoothing here as well to keep accuracy
             self.prior[idx] = X_c.shape[0] / numSamples
 
     # Predicting the class of the input data
     def predict(self, X):
         yPred = [self._predict(x) for x in X]
         return np.array(yPred)
-    
+
     # Helper function to predict the class of the input data
     def _predict(self, x):
         posteriors = []
@@ -44,11 +43,8 @@ class NaiveBayes:
     def _pdf(self, classIdx, x):
         mean = self.mean[classIdx]
         var = self.var[classIdx]
-        numerator = np.exp(-((x-mean)**2) / (2 * var))
+        numerator = np.exp(-((x - mean) ** 2) / (2 * var))
         denominator = np.sqrt(2 * np.pi * var)
         pdf_values = numerator / denominator
 
-
         return pdf_values
-
-
