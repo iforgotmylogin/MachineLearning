@@ -6,7 +6,7 @@ def main():
     preprocessor = PreProcessor()
 
     # Set the dataset path (adjust this according to your dataset)
-    preprocessor.setDatabase("data/iris.data")  
+    preprocessor.setDatabase("data/abalone.data")  
 
     # Import and process the data
     raw_data = preprocessor.importData()
@@ -14,8 +14,11 @@ def main():
     
     # Stratify and get class counts
     label_index = -1  # use for most data sets 
-    #label_index = 0  # use for house votes
-    class_dict, posCount, negCount, neutralCount, otherCount = preprocessor.stratifiedSplit(cleaned_data, label_index)
+    #label_index = 0  # use for house votes or change for the reg data sets
+
+   # class_dict, posCount, negCount, neutralCount, otherCount = preprocessor.stratifiedSplit(cleaned_data, label_index)
+
+    class_dict = preprocessor.regSplit(cleaned_data, label_index)
 
     # Create 10 stratified folds
     folds = preprocessor.createFolds(class_dict, num_folds=10)

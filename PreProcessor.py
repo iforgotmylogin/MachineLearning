@@ -13,20 +13,36 @@ class PreProcessor:
     def importData(self):
         if not self.dataPath:
             raise ValueError("Data path is not set.")
-
+        
         rawData = []
+        
         with open(self.dataPath, "r") as f:
             for line in f:
                 data = line.strip().split(",")
-                proline = [float(val) if val not in ('', '?' ,'n','y') else (-1 if val == '?' else 0 if val == 'n' else 1 if val == 'y' else None) for val in data] #change this line to effect how ? is handled 
+                proline = []
+                for val in data:
+                    if val == '?':
+                        proline.append(-1)  # Handle missing value
+                    elif val == 'n':
+                        proline.append(0)   # Handle 'no'
+                    elif val == 'y':
+                        proline.append(1)   # Handle 'yes'
+                    else:
+                        try:
+                            proline.append(float(val))  # Try to convert to float
+                        except ValueError:
+                           next
+                            
                 rawData.append(proline)
 
         print("Data importation complete.")
+        #print(rawData)
         return rawData
 
     def cleanData(self, rawData):
-        cleanedData = [sample for sample in rawData if None not in sample]
+        cleanedData = [sample for sample in rawData if None not in sample and len(sample) > 1]
         print(f"Cleaned data: {len(cleanedData)} samples remain.")
+        #print (cleanedData)
         return cleanedData
 
     def stratifiedSplit(self, cleanedData, label_index):
@@ -34,7 +50,8 @@ class PreProcessor:
         for sample in cleanedData:
             classDict[sample[label_index]].append(sample)
 
-        #change what the class lables are here
+
+        #change what the class lables are here should work for all calssification
         posCount = len(classDict[1])
         negCount = len(classDict[0])
         neutralCount = len(classDict[10])
@@ -42,7 +59,20 @@ class PreProcessor:
 
         print(f"Class counts: pos={posCount}, neg={negCount}, neutral={neutralCount}, other={otherCount}")
         return classDict, posCount, negCount, neutralCount, otherCount
-
+    
+    def regSplit(self, cleanedData, label_index):
+        classDict = defaultdict(list)
+        
+        # Sort cleanedData in ascending order based on the element at label_index
+        cleanedData.sort(key=lambda x: x[label_index])
+        
+        # Create 10 groups by taking every 10th element
+        for i in range(len(cleanedData)):
+            group_index = i % 10  # Calculate group index (0-9)
+            classDict[group_index].append(cleanedData[i])  # Add element to the corresponding group
+    
+        return classDict
+    
     def createFolds(self, classDict, num_folds=11):
         self.num_folds = num_folds
         folds = [[] for _ in range(num_folds)]
