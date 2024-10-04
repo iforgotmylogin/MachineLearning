@@ -1,11 +1,13 @@
 import numpy as np
 from KNNClassifier import KNNClassifier
 from PreProcessor import PreProcessor
+from TuneK import TuneK
 
 def main():
     preProccesor = PreProcessor()     
 
-    preProccesor.setDatabase("data/breast-cancer-wisconsin.data")
+    dataPath = "data/house-votes-84.data"
+    preProccesor.setDatabase(dataPath)
     
     # Import raw data
     rawData = preProccesor.importData()
@@ -21,7 +23,7 @@ def main():
 
     accuracies = []
 
-    k = 4 # TODO need to tune this later
+    k = TuneK.tune(1, dataPath) #tunes k starting with k =1 and increases by 1 ten times
 
     for i in range(preProccesor.num_folds): #-1 to leave the 11th fold for tunning 
         test_fold = folds[i]
@@ -29,11 +31,11 @@ def main():
         train_data = [sample for fold in train_folds for sample in fold]
 
         # Convert to NumPy arrays
-        X_train = np.array([sample[:10] for sample in train_data])
-        y_train = np.array([sample[10] for sample in train_data])
-        X_test = np.array([sample[:10] for sample in test_fold])
-        y_test = np.array([sample[10] for sample in test_fold])
-        
+        X_train = np.array([sample[:10] for sample in train_data])  # Features
+        y_train = np.array([sample[10] for sample in train_data])   # Labels
+        X_test = np.array([sample[:10] for sample in test_fold])    # Test features
+        y_test = np.array([sample[10] for sample in test_fold])     # Test labels
+
         # Predict on the test fold
         y_pred = [KNNClassifier.predict_classification(X_train,y_train,test_instance,k)for test_instance in X_test]
         
