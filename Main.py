@@ -1,36 +1,41 @@
 import numpy as np
-from NaiveBayes import NaiveBayes
+from KNNClassifier import KNNClassifier
 from PreProcessor import PreProcessor
 
 def main():
-    preProccesor = PreProccesor()
+    preProccesor = PreProcessor()     
 
     preProccesor.setDatabase("data/breast-cancer-wisconsin.data")
-    #preProccesor.createFolds(10)
+    
+    # Import raw data
+    rawData = preProccesor.importData()
 
-    rawPos, rawNeg, posCount, negCount = preProccesor.importData()
+    # Clean data
+    cleanedData = preProccesor.cleanData(rawData)
 
-    folds = preProccesor.createFolds(rawPos, rawNeg, posCount, negCount, 10) #create folds for cross validation
+    # Perform stratified split to get class data
+    classDict, posCount, negCount, neutralCount, otherCount = preProccesor.stratifiedSplit(cleanedData, label_index=10)  # Assuming class label is at index 10
+
+    # Create folds from the stratified data
+    folds = preProccesor.createFolds(classDict, num_folds=10)  # Create folds for cross-validation
 
     accuracies = []
 
-    for i in range(preProccesor.num_folds):
+    k = 4 # TODO need to tune this later
+
+    for i in range(preProccesor.num_folds): #-1 to leave the 11th fold for tunning 
         test_fold = folds[i]
         train_folds = [folds[j] for j in range(preProccesor.num_folds) if j != i]
         train_data = [sample for fold in train_folds for sample in fold]
-        
+
         # Convert to NumPy arrays
         X_train = np.array([sample[:10] for sample in train_data])
         y_train = np.array([sample[10] for sample in train_data])
         X_test = np.array([sample[:10] for sample in test_fold])
         y_test = np.array([sample[10] for sample in test_fold])
         
-        # Train the Naive Bayes model
-        model = NaiveBayes()
-        model.fit(X_train, y_train)
-        
         # Predict on the test fold
-        y_pred = model.predict(X_test)
+        y_pred = [KNNClassifier.predict_classification(X_train,y_train,test_instance,k)for test_instance in X_test]
         
         # Calculate accuracy
         accuracy = np.mean(y_pred == y_test)
