@@ -43,6 +43,6 @@ class KNNClassifier:
 
 
     def f1_score_metric(actual, predicted):
-        precision = precision_metric(actual, predicted)
-        recall = recall_metric(actual, predicted)
+        precision = KNNClassifier.precision_metric(actual, predicted)
+        recall = KNNClassifier.recall_metric(actual, predicted)
         return 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
