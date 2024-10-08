@@ -3,13 +3,16 @@ from PreProcessor import PreProcessor
 from EditedKNN import EditedKNN
 from KNNClassifier import KNNClassifier
 from KMeansClustering import KMeansClustering
+from TuneK import TuneK
 
 def main():
     preProcessor = PreProcessor()
 
-    dataPath = "data/forestfires.data"
-    label_index = -1  
+    dataPath = "data/breast-cancer-wisconsin.data"
+    label_index = -1
 
+    preProcessor.reset()
+    
     preProcessor.setDatabase(dataPath)
 
     # Import raw data
@@ -18,8 +21,12 @@ def main():
     # Clean data
     cleanedData = preProcessor.cleanData(rawData)
 
-    # Perform stratified split to get class data
-    classDict = preProcessor.regSplit(cleanedData, label_index=label_index)
+    # Perform stratified split to get class data for regression sets
+    #classDict = preProcessor.regSplit(cleanedData, label_index=label_index)
+
+    # Perform stratified split to get class data for classification sets 
+    classDict, posCount, negCount, neutralCount, otherCount = preProcessor.stratifiedSplit(cleanedData, label_index)
+
     print("main -------------------------------------")
 
     # Create folds from the stratified data
@@ -29,7 +36,9 @@ def main():
     editedKnnAccuracies = []
     kmeansAccuracies = []
 
-    k = 3  # Example k value for KNN and Edited KNN
+    tuner = TuneK()  # Create an instance of TuneK
+    k = tuner.tune(1, dataPath)  #tunes k on the bascic KNN then apply to all the other modles
+  
 
     for i in range(preProcessor.num_folds):
         testFold = folds[i]

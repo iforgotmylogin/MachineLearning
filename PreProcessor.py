@@ -48,16 +48,17 @@ class PreProcessor:
     def stratifiedSplit(self, cleanedData, label_index):
         classDict = defaultdict(list)
         for sample in cleanedData:
+            # Append samples to the dictionary based on their label
             classDict[sample[label_index]].append(sample)
 
-
-        #change what the class lables are here should work for all calssification
-        posCount = len(classDict[1])
-        negCount = len(classDict[0])
-        neutralCount = len(classDict[10])
-        otherCount = len(classDict[11])
+        # Count occurrences for each label and ensure default values
+        posCount = len(classDict.get(1, []))  # Count for positive class
+        negCount = len(classDict.get(0, []))  # Count for negative class
+        neutralCount = len(classDict.get(10, []))  # Count for neutral class
+        otherCount = len(classDict.get(11, []))  # Count for other class
 
         print(f"Class counts: pos={posCount}, neg={negCount}, neutral={neutralCount}, other={otherCount}")
+        
         return classDict, posCount, negCount, neutralCount, otherCount
     
     def regSplit(self, cleanedData, label_index):
@@ -72,19 +73,24 @@ class PreProcessor:
             classDict[group_index].append(cleanedData[i])  # Add element to the corresponding group
     
         return classDict
-    
-    def createFolds(self, classDict, num_folds=11):
+        
+    def createFolds(self, classDict, num_folds=10):
         self.num_folds = num_folds
         folds = [[] for _ in range(num_folds)]
 
         for class_samples in classDict.values():
             random.shuffle(class_samples)
             fold_size = len(class_samples) // num_folds
+            print(f"Class samples count: {len(class_samples)}, Fold size: {fold_size}")
 
             for fold_index in range(num_folds):
                 start = fold_index * fold_size
                 end = start + fold_size if fold_index < num_folds - 1 else len(class_samples)
                 folds[fold_index].extend(class_samples[start:end])
+
+        # Log the contents of each fold
+        for i, fold in enumerate(folds):
+            print(f"Fold {i} contains {len(fold)} samples")
 
         print("Folds created with stratified data.")
         return folds
@@ -100,3 +106,9 @@ class PreProcessor:
                     for i in range(len(fold)):
                         fold[i][index] = sublist[i]
         print("Noise generation complete.")
+    
+    def reset(self):
+        self.rawData = []
+        self.cleanedData = []
+        self.classDict = defaultdict(list)
+        self.folds = []

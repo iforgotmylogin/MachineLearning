@@ -2,7 +2,7 @@ import math
 from collections import Counter
 
 class KNNClassifier:
-    def __init__(self, k=3, bandwidth=1.0):
+    def __init__(self, k, bandwidth=1.0):
         self.k = k
         self.bandwidth = bandwidth
         self.training_set = []
