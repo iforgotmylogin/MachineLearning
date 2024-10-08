@@ -1,48 +1,49 @@
-import numpy as np
-
+import math
+from collections import Counter
 
 class KNNClassifier:
-    def euclidean_distance(a, b):
-        return np.sqrt(np.sum((a - b) ** 2))
+    def __init__(self, k=3, bandwidth=1.0):
+        self.k = k
+        self.bandwidth = bandwidth
+        self.training_set = []
 
+    def euclidean_distance(self, sample1, sample2):
+        distance = 0
+        for i in range(len(sample1) - 1):  # Exclude the label
+            distance += (sample1[i] - sample2[i]) ** 2
+        return math.sqrt(distance)
 
-    def get_neighbors(training_set, training_labels, test_instance, k):
+    def gaussian_kernel(self, distance):
+        return (1 / (self.bandwidth * math.sqrt(2 * math.pi))) * math.exp(-0.5 * (distance / self.bandwidth) ** 2)
+
+    def knn_predict(self, test_instance):
         distances = []
-        for i in range(len(training_set)):
-            dist = KNNClassifier.euclidean_distance(test_instance, training_set[i])
-            distances.append((training_labels[i], dist))
+        for train_instance in self.training_set:
+            dist = self.euclidean_distance(train_instance, test_instance)
+            distances.append((train_instance, dist))
         distances.sort(key=lambda x: x[1])
-        neighbors = [distances[i][0] for i in range(k)]
-        return neighbors
+        neighbors = distances[:self.k]
 
+        # For regression, use Gaussian kernel weights
+        weighted_sum = 0.0
+        weight_sum = 0.0
 
-    def predict_classification(training_set, training_labels, test_instance, k):
-        neighbors = KNNClassifier.get_neighbors(training_set, training_labels, test_instance, k)
-        prediction = max(set(neighbors), key=neighbors.count)
-        return prediction
+        for neighbor, dist in neighbors:
+            weight = self.gaussian_kernel(dist)
+            weighted_sum += neighbor[-1] * weight
+            weight_sum += weight
 
+        if weight_sum == 0:
+            return 0  # Prevent division by zero
 
-    def accuracy_metric(actual, predicted):
-        correct = 0
-        for i in range(len(actual)):
-            if actual[i] == predicted[i]:
-                correct += 1
-        return correct / float(len(actual))
+        return weighted_sum / weight_sum
 
+    def fit(self, training_set):
+        self.training_set = training_set
 
-    def precision_metric(actual, predicted):
-        true_positives = sum((pred == 1 and act == 1) for pred, act in zip(predicted, actual))
-        predicted_positives = sum(predicted)
-        return true_positives / predicted_positives if predicted_positives > 0 else 0
-
-
-    def recall_metric(actual, predicted):
-        true_positives = sum((pred == 1 and act == 1) for pred, act in zip(predicted, actual))
-        actual_positives = sum(actual)
-        return true_positives / actual_positives if actual_positives > 0 else 0
-
-
-    def f1_score_metric(actual, predicted):
-        precision = KNNClassifier.precision_metric(actual, predicted)
-        recall = KNNClassifier.recall_metric(actual, predicted)
-        return 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    def predict(self, test_set):
+        predictions = []
+        for instance in test_set:
+            prediction = self.knn_predict(instance)
+            predictions.append(prediction)
+        return predictions

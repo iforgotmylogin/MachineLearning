@@ -1,68 +1,87 @@
 import numpy as np
-from KNNClassifier import KNNClassifier
 from PreProcessor import PreProcessor
-from TuneK import TuneK
+from EditedKNN import EditedKNN
+from KNNClassifier import KNNClassifier
+from KMeansClustering import KMeansClustering
 
 def main():
-    preProccesor = PreProcessor()     
+    preProcessor = PreProcessor()
 
     dataPath = "data/forestfires.data"
-    label_index = -1 #change here and in TuneK
+    label_index = -1  
 
-    preProccesor.setDatabase(dataPath)
-    
+    preProcessor.setDatabase(dataPath)
+
     # Import raw data
-    rawData = preProccesor.importData()
+    rawData = preProcessor.importData()
 
     # Clean data
-    cleanedData = preProccesor.cleanData(rawData)
+    cleanedData = preProcessor.cleanData(rawData)
 
     # Perform stratified split to get class data
-    #use for classification
-    #classDict, posCount, negCount, neutralCount, otherCount = preProccesor.stratifiedSplit(cleanedData, label_index=10)  # Assuming class label is at index 10
-
-    #use for regression
-    classDict = preProccesor.regSplit(cleanedData, label_index=label_index )  # Assuming class label is at index 10
+    classDict = preProcessor.regSplit(cleanedData, label_index=label_index)
     print("main -------------------------------------")
-   
+
     # Create folds from the stratified data
-    folds = preProccesor.createFolds(classDict, num_folds=10)  # Create folds for cross-validation
+    folds = preProcessor.createFolds(classDict, num_folds=10)
 
-    accuracies = []
+    knnAccuracies = []
+    editedKnnAccuracies = []
+    kmeansAccuracies = []
 
-    k = TuneK.tune(1, dataPath) #tunes k starting with k =1 and increases by 1 ten times
+    k = 3  # Example k value for KNN and Edited KNN
 
-    for i in range(preProccesor.num_folds): 
-        test_fold = folds[i]
-        train_folds = [folds[j] for j in range(preProccesor.num_folds) if j != i]
-        train_data = [sample for fold in train_folds for sample in fold]
-             
-        for j, sample in enumerate(train_data):
-             #print(f"Sample {i} length: {len(sample)}")
-             if (len(sample) == 9):
+    for i in range(preProcessor.num_folds):
+        testFold = folds[i]
+        trainFolds = [folds[j] for j in range(preProcessor.num_folds) if j != i]
+        trainData = [sample for fold in trainFolds for sample in fold]
+
+        # Remove the first element from samples if they have a length of 9
+        for j, sample in enumerate(trainData):
+            if len(sample) == 9:
                 del sample[0]
-        for l, sample in enumerate(test_fold):
-             #print(f"Sample {i} length: {len(sample)}")
-             if (len(sample) == 9):
+        for l, sample in enumerate(testFold):
+            if len(sample) == 9:
                 del sample[0]
 
-       
         # Convert to NumPy arrays
-        X_train = np.array([sample[:label_index] + sample[label_index + 1:] for sample in train_data])  # Features
-        y_train = np.array([sample[label_index] for sample in train_data])   # Labels
-        X_test = np.array([sample[:label_index] + sample[label_index + 1:] for sample in test_fold])    # Test features
-        y_test = np.array([sample[label_index] for sample in test_fold])     # Test labels
+        X_train = np.array([sample[:label_index] + sample[label_index + 1:] for sample in trainData])  # Features
+        y_train = np.array([sample[label_index] for sample in trainData])   # Labels
+        X_test = np.array([sample[:label_index] + sample[label_index + 1:] for sample in testFold])    # Test features
+        y_test = np.array([sample[label_index] for sample in testFold])     # Test labels
 
-        # Predict on the test fold
-        y_pred = [KNNClassifier.predict_classification(X_train,y_train,test_instance,k)for test_instance in X_test]
+        # KNN Classification
+        knn_classifier = KNNClassifier(k=k)  # Create an instance of KNNClassifier
+        knn_classifier.fit(trainData)  # Fit the model
+        knnPredictions = knn_classifier.predict(testFold)  # Use the predict method
+        knnAccuracy = np.mean(knnPredictions == y_test)
+        knnAccuracies.append(knnAccuracy)
+        print(f"KNN Fold {i + 1} Accuracy: {knnAccuracy:.2f}")
+
+        # Edited KNN Classification
+        editedKnnClassifier = EditedKNN(k=k)
+        editedKnnClassifier.fit(trainData)
+        editedKnnPredictions = editedKnnClassifier.predict(testFold)
+        editedKnnAccuracy = np.mean(editedKnnPredictions == y_test)
+        editedKnnAccuracies.append(editedKnnAccuracy)
+        print(f"Edited KNN Fold {i + 1} Accuracy: {editedKnnAccuracy:.2f}")
+
+        # K-Means Clustering
+        kMeans = KMeansClustering(k=2) 
+        kMeans.fit(X_train)
+        
+        # Get predictions for the test data
+        kMeansTestLabels = kMeans.predict(X_test)
         
         # Calculate accuracy
-        accuracy = np.mean(y_pred == y_test)
-        accuracies.append(accuracy)
-        print(f"Fold {i + 1} Accuracy: {accuracy}")
+        kMeansAccuracy = np.mean(kMeansTestLabels == y_test)
+        kmeansAccuracies.append(kMeansAccuracy)
+        print(f"K-Means Fold {i + 1} Accuracy: {kMeansAccuracy:.2f}")
 
     # Output the average accuracy across all folds
-    print(f"Average Accuracy: {np.mean(accuracies)}")
+    print(f"Average KNN Accuracy: {np.mean(knnAccuracies):.2f}")
+    print(f"Average Edited KNN Accuracy: {np.mean(editedKnnAccuracies):.2f}")
+    print(f"Average K-Means Accuracy: {np.mean(kmeansAccuracies):.2f}")
 
 if __name__ == "__main__":
     main()
