@@ -2,9 +2,10 @@ import math
 from collections import Counter
 
 class KNNClassifier:
-    def __init__(self, k, bandwidth=1.0):
+    def __init__(self, k, bandwidth=1.0, distance_metric='euclidean'):
         self.k = k
         self.bandwidth = bandwidth
+        self.distance_metric = distance_metric
         self.training_set = []
 
     def euclidean_distance(self, sample1, sample2):
@@ -12,6 +13,20 @@ class KNNClassifier:
         for i in range(len(sample1) - 1):  # Exclude the label
             distance += (sample1[i] - sample2[i]) ** 2
         return math.sqrt(distance)
+
+    def manhattan_distance(self, sample1, sample2):
+        distance = 0
+        for i in range(len(sample1) - 1):  # Exclude the label
+            distance += abs(sample1[i] - sample2[i])
+        return distance
+
+    def calculate_distance(self, sample1, sample2):
+        if self.distance_metric == 'euclidean':
+            return self.euclidean_distance(sample1, sample2)
+        elif self.distance_metric == 'manhattan':
+            return self.manhattan_distance(sample1, sample2)
+        else:
+            raise ValueError("Unsupported distance metric")
 
     def gaussian_kernel(self, distance):
         return (1 / (self.bandwidth * math.sqrt(2 * math.pi))) * math.exp(-0.5 * (distance / self.bandwidth) ** 2)
