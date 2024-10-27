@@ -4,9 +4,6 @@ from PreProcessor import PreProcessor
 from KNN.EditedKNN import EditedKNN
 from KNN.KNNClassifier import KNNClassifier
 from KNN.KMeansClustering import KMeansClustering
-from TuneK import TuneK
-
-
 
 def plot_accuracies(euclidean_accuracies, manhattan_accuracies):
     methods = ['KNN', 'Edited KNN', 'K-Means']
