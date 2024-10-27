@@ -1,6 +1,6 @@
 import numpy as np
-from KNNClassifier import KNNClassifier
-from PreProcessor import PreProcessor
+from KNN.KNNClassifier import KNNClassifier
+from KNN.PreProcessor import PreProcessor
 
 class TuneK:
     def tune(self, initial_k, DataPath):

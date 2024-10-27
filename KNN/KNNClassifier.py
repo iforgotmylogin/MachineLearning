@@ -28,6 +28,7 @@ class KNNClassifier:
         else:
             raise ValueError("Unsupported distance metric")
 
+    # Use Gaussian/RBF kernel for regression
     def gaussian_kernel(self, distance):
         return (1 / (self.bandwidth * math.sqrt(2 * math.pi))) * math.exp(-0.5 * (distance / self.bandwidth) ** 2)
 
@@ -39,7 +40,7 @@ class KNNClassifier:
         distances.sort(key=lambda x: x[1])
         neighbors = distances[:self.k]
 
-        # For regression, use Gaussian kernel weights
+        # For regression, use RBF kernel weights
         weighted_sum = 0.0
         weight_sum = 0.0
 

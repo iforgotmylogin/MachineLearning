@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PreProcessor import PreProcessor
-from EditedKNN import EditedKNN
-from KNNClassifier import KNNClassifier
-from KMeansClustering import KMeansClustering
+from KNN.EditedKNN import EditedKNN
+from KNN.KNNClassifier import KNNClassifier
+from KNN.KMeansClustering import KMeansClustering
 from TuneK import TuneK
 
 
