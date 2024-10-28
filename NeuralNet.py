@@ -57,6 +57,43 @@ class NeuralNet:
                 
                 results.append(x)  # Store output for each sample
 
-        print(results)
+        #print(results)
         return results  # Return all outputs from the outputlayer
+  
+    def backProp(self, results, label, data):
+        MeanSqrError = 0  # Initialize Mean Squared Error
+        num_samples = len(results)  # Number of samples
 
+        # Initialize a list to hold squared errors for all outputs
+        all_squared_errors = []
+
+        # Get labels for expected output
+        for j, fold in enumerate(data):
+            for i, sample in enumerate(fold):
+                lable = data[j][i][label]  # Get the expected output from the data
+                # Ensure results and expected have the same shape before calculating error
+                output = results[i]  # Corresponding output for the expected label
+
+                #translate class lables into disred node output
+                expected = [0] * len(results)
+                if (lable == 0):
+                    expected[0] = 1 #first node should be true
+                    expected[1] = 0 #second node should be true
+                
+                if (lable == 1):
+                    expected[0] = 0 #first node should be true
+                    expected[1] = 1 #second node should be true
+                
+
+                # Calculate the squared error for the current sample
+                # Get the corresponding output from results
+                output = results[i]  
+
+                # Calculate the squared error for each node
+                squared_error = [(output_val - expected_val) ** 2 for output_val, expected_val in zip(output, expected)]
+                all_squared_errors.append(sum(squared_error))  # Sum the squared errors for this sample
+
+        # Calculate the mean of all squared errors
+        MeanSqrError = np.mean(all_squared_errors)  # Average the errors
+
+        print("Mean Squared Error:", MeanSqrError)

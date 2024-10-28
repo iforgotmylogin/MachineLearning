@@ -52,7 +52,8 @@ def main():
     
     network = NeuralNet(folds, 2, 4, 2) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
 
-    network.feedforwardEpoch(folds)
+    
+    network.backProp(network.feedforwardEpoch(folds),label_index,folds)
 
 if __name__ == "__main__":
     main()
