@@ -46,14 +46,19 @@ def main():
 
     print("main -------------------------------------")
 
-    # Create folds from the stratified data
-    
     folds = preProcessor.createFolds(classDict, num_folds=10)
     
-    network = NeuralNet(folds, 2, 4, 2) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
+    network = NeuralNet(folds,4,2, 2) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
 
+    epoch = 0
+    error = 2
+    newerror = 1
+    while error >= newerror:
+        error = newerror
+        newerror = network.backProp(network.feedforwardEpoch(folds), label_index, folds, epoch=epoch)
+        epoch += 1
     
-    network.backProp(network.feedforwardEpoch(folds),label_index,folds)
-
+    print(epoch)
+            
 if __name__ == "__main__":
     main()
