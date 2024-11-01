@@ -29,7 +29,8 @@ def plot_accuracies(euclidean_accuracies, manhattan_accuracies):
 def main():
     preProcessor = PreProcessor()
 
-    dataPath = "data/breast-cancer-wisconsin.data"
+    dataPath = "data/house-votes-84.data"
+    numOutput = 3
     label_index = -1
 
     preProcessor.reset()
@@ -48,17 +49,20 @@ def main():
 
     folds = preProcessor.createFolds(classDict, num_folds=10)
     
-    network = NeuralNet(folds,4,2, 2) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
+    network = NeuralNet(folds,3,5,numOutput) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
 
     epoch = 0
     error = 2
     newerror = 1
-    while error >= newerror:
+    max_epochs = 250  # Set maximum epoch limit
+
+    while abs(error - newerror) > 1e-5 and epoch < max_epochs:
         error = newerror
-        newerror = network.backProp(network.feedforwardEpoch(folds), label_index, folds, epoch=epoch)
+        newerror = network.backProp(network.feedforwardEpoch(folds), label_index, folds, epoch=1)
         epoch += 1
-    
-    print(epoch)
-            
+
+    print(f"Training completed in {epoch} epochs.")
+                
 if __name__ == "__main__":
     main()
+ 
