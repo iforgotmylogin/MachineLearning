@@ -25,44 +25,67 @@ def plot_accuracies(euclidean_accuracies, manhattan_accuracies):
 
     plt.show()
 
-
-def main():
+def setup_preprocessing(data_path):
     preProcessor = PreProcessor()
-
-    dataPath = "data/house-votes-84.data"
-    numOutput = 3
-    label_index = -1
-
     preProcessor.reset()
-    preProcessor.setDatabase(dataPath)
-
-    # Import raw data
+    preProcessor.setDatabase(data_path)
     rawData = preProcessor.importData()
-
-    # Clean data
     cleanedData = preProcessor.cleanData(rawData)
+    return cleanedData, preProcessor
 
-    # Perform stratified split to get class data for classification sets
-    classDict, posCount, negCount, neutralCount, otherCount = preProcessor.stratifiedSplit(cleanedData, label_index)
-
-    print("main -------------------------------------")
-
-    folds = preProcessor.createFolds(classDict, num_folds=10)
-    
-    network = NeuralNet(folds,3,5,numOutput) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
-
+def train_network(folds, num_output, label_index):
+    network = NeuralNet(folds,3, 8, num_output)  # | data | number of hidden layers | number of nodes per hidden layer | number out outputs |
     epoch = 0
     error = 2
     newerror = 1
     max_epochs = 250  # Set maximum epoch limit
 
-    while abs(error - newerror) > 1e-5 and epoch < max_epochs:
+    while abs(error - newerror) > 1e-9 and epoch < max_epochs:
         error = newerror
-        newerror = network.backProp(network.feedforwardEpoch(folds), label_index, folds, epoch=1)
+        newerror = network.backProp(network.feedforwardEpoch(folds), label_index, folds, epoch=epoch)
         epoch += 1
 
     print(f"Training completed in {epoch} epochs.")
-                
+    return network
+
+def evaluate_network(network, data, label_index):
+    results = network.backProp(network.feedforwardEpoch(data), label_index, data, 1)
+    return results
+
+def main():
+    data_path = "data/glass.data" # data set 
+    numOutput = 2
+    label_index = -1
+
+    # Set up preprocessing
+    cleaned_data, preProcessor = setup_preprocessing(data_path)
+
+    # Perform stratified split to get class data for classification sets
+    classDict, posCount, negCount, neutralCount, otherCount = preProcessor.stratifiedSplit(cleaned_data, label_index)
+    folds = preProcessor.createFolds(classDict, num_folds=10)
+
+    results = []
+    # Outer loop for testing each fold
+    for i, outer_fold in enumerate(folds):
+        # Combine all folds except the current outer fold for training
+        training_folds = []
+        for j, fold in enumerate(folds):
+            if j != i:  # Append all folds except the outer fold
+                training_folds.extend(fold)
+
+        # Train the neural network on the combined training folds
+        network = train_network(training_folds, numOutput, label_index)
+
+        # Evaluate performance on the current outer fold
+        fold_performance = evaluate_network(network, outer_fold, label_index)
+        results.append(fold_performance)
+        print(f'Performance for fold {i+1}: {fold_performance}')  # Print performance for each fold
+    avgResult = 0
+    for result in results:
+        avgResult += result
+    avgResult /= len(results)
+    print(avgResult)
+        
+
 if __name__ == "__main__":
     main()
- 
