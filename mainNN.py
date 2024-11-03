@@ -48,7 +48,7 @@ def evaluate(network, test_set, label_index):
 
 def main():
     preProcessor = PreProcessor()
-    dataPath = "data/glass.data"
+    dataPath = "data/soybean-small.data"
     numOutput = 2
     label_index = -1
 
