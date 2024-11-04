@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 def sigmoid(x):
     # Clip the input to a specified range
@@ -95,6 +96,20 @@ class NeuralNet:
                         layer_errors = [sum(error) for error in zip(*new_errors)]
 
         mean_squared_error = np.mean(all_squared_errors)
-        print("Mean Squared Error:", mean_squared_error)
+        #print("Mean Squared Error:", mean_squared_error)
         return mean_squared_error
 
+    def train_model(self, folds, label_index, max_epochs=250):
+        start_time = time.time()
+        epoch = 0
+        error = 2
+        newerror = 1
+
+        while abs(error - newerror) > 1e-5 and epoch < max_epochs:
+            error = newerror
+            newerror = self.backProp(self.feedforwardEpoch(folds), label_index, folds, epoch=1)
+            epoch += 1
+
+        training_time = time.time() - start_time
+        print(f"Training completed in {epoch} epochs.")
+        return training_time, newerror

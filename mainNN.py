@@ -1,35 +1,29 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from PreProcessor import PreProcessor
 from NeuralNet import NeuralNet
 
-def plot_accuracies(euclidean_accuracies, manhattan_accuracies):
-    methods = ['KNN', 'Edited KNN', 'K-Means']
-    x = np.arange(len(methods))
+def print_weights(network):
+    print("Network weights and biases:")
+    for layer_idx, layer in enumerate(network.layers):
+        print(f"Layer {layer_idx + 1}:")
+        for neuron_idx, neuron in enumerate(layer):
+            print(f"  Neuron {neuron_idx + 1}: Weights = {neuron.weights}, Bias = {neuron.bias}")
 
-    euclidean_means = [np.mean(acc[:10]) for acc in euclidean_accuracies]
-    manhattan_means = [np.mean(acc[10:]) for acc in manhattan_accuracies]
 
-    fig, ax = plt.subplots()
-    bar_width = 0.35
-
-    bars1 = ax.bar(x - bar_width / 2, euclidean_means, bar_width, label='Euclidean')
-    bars2 = ax.bar(x + bar_width / 2, manhattan_means, bar_width, label='Manhattan')
-
-    ax.set_xlabel('Methods')
-    ax.set_ylabel('Average Accuracy')
-    ax.set_title('Comparison of Average Accuracies')
-    ax.set_xticks(x)
-    ax.set_xticklabels(methods)
-    ax.legend()
-
-    plt.show()
+def print_activations(network, sample):
+    activations = []
+    x = np.array(sample)
+    for layer in network.layers:
+        x = np.array([neuron.feedforward(x) for neuron in layer])
+        activations.append(x)
+    print("Activations at each layer:")
+    for layer_idx, activation in enumerate(activations):
+        print(f"  Layer {layer_idx + 1}: {activation}")
 
 
 def main():
     preProcessor = PreProcessor()
-
-    dataPath = "data/house-votes-84.data"
+    dataPath = "data/machine copy.data"
     numOutput = 3
     label_index = -1
 
@@ -45,24 +39,23 @@ def main():
     # Perform stratified split to get class data for classification sets
     classDict, posCount, negCount, neutralCount, otherCount = preProcessor.stratifiedSplit(cleanedData, label_index)
 
-    print("main -------------------------------------")
-
     folds = preProcessor.createFolds(classDict, num_folds=10)
-    
-    network = NeuralNet(folds,3,5,numOutput) #data, number of hidden layers, number of nodes in each hidden layer, number of outputs(classes)
 
-    epoch = 0
-    error = 2
-    newerror = 1
-    max_epochs = 250  # Set maximum epoch limit
+    mse_per_model = []
+    training_times_per_model = []
 
-    while abs(error - newerror) > 1e-5 and epoch < max_epochs:
-        error = newerror
-        newerror = network.backProp(network.feedforwardEpoch(folds), label_index, folds, epoch=1)
-        epoch += 1
+    for numHLayers in [0, 1, 2]:
+        print(f"\nTraining with {numHLayers} hidden layers:")
+        network = NeuralNet(folds, numHLayers, 5, numOutput)
+        training_time, average_mse = network.train_model(folds, label_index)
+        mse_per_model.append(average_mse)
+        training_times_per_model.append(training_time)
 
-    print(f"Training completed in {epoch} epochs.")
-                
+    print("\nResults Summary:")
+    for i, num_layers in enumerate([0, 1, 2]):
+        print(f"Model with {num_layers} hidden layers:")
+        print(f"  Average MSE: {mse_per_model[i]:.4f}")
+        print(f"  Training Time: {training_times_per_model[i]:.2f} seconds")
+
 if __name__ == "__main__":
     main()
- 
