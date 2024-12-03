@@ -1,0 +1,24 @@
+def train_network(folds, num_output, label_index, is_classification):
+    network = NeuralNet(folds, 2, 5, num_output)  # | data | num hidden layers | number of nodes per layer | number of outputs |
+    epoch = 0
+    error = 2
+    newerror = 1
+    max_epochs = 250  # Set maximum epoch limit
+
+    while abs(error - newerror) > 1e-9 and epoch < max_epochs:
+        error = newerror
+        if is_classification:
+            newerror = network.backProp_classification(network.feedforwardEpoch(folds), label_index, folds, epoch=epoch)
+        else:
+            newerror = network.backProp_regression(network.feedforwardEpoch(folds), label_index, folds, epoch=epoch)
+        epoch += 1
+
+    print(f"Training completed in {epoch} epochs.")
+    return network
+
+def evaluate_network(network, data, label_index, is_classification):
+    if is_classification:
+        results = network.backProp_classification(network.feedforwardEpoch(data), label_index, data, 1)
+    else:
+        results = network.backProp_regression(network.feedforwardEpoch(data), label_index, data, 1)
+    return results

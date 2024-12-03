@@ -34,6 +34,7 @@ class NeuralNet:
         for layer_weights in weights:
             neurons = [Neuron(w, np.random.rand()) for w in layer_weights]
             self.layers.append(neurons)
+            
 
     @staticmethod
     def initWeights(data, numHLayers, numHNodes, numOutputs):
@@ -59,8 +60,31 @@ class NeuralNet:
             for layer in self.layers:
                 x = np.array([neuron.feedforward(x) for neuron in layer])
             results.append(x)
+        # print("layer outputs")
+        # print(results)
         return results
-
+    
+    def get_weights(self):
+        """Retrieve all weights in the network as a flat list."""
+        all_weights = []
+        for layer in self.layers:
+            for neuron in layer:
+                all_weights.append(neuron.weights)
+        #print(all_weights)
+        return all_weights
+    
+    def set_weights(self, new_weights):
+        """Set new weights for the entire network."""
+        assert len(new_weights) == len(self.layers), "Mismatch in number of layers"
+        
+        # Flatten the new weights into the structure of each layer
+        index = 0
+        for layer in self.layers:
+            for neuron in layer:
+                num_weights = len(neuron.weights)  # Number of weights for this neuron
+                # Reshape the new_weights to match the dimensions
+                neuron.weights = np.array(new_weights[index:index + num_weights])
+                index += num_weights
     def backProp_classification(self, results, label_index, data, initial_learning_rate=0.015, decay_rate=0.1, epoch=1, gradient_clip_value=0.5):
         learning_rate = initial_learning_rate * np.exp(-decay_rate * epoch)
         all_squared_errors = []
@@ -89,6 +113,9 @@ class NeuralNet:
                     gradient = np.clip(layer_errors[neuron_idx], -gradient_clip_value, gradient_clip_value)
                     neuron.weights -= learning_rate * gradient * neuron.inputs
                     neuron.bias -= learning_rate * gradient
+                    
+                    # print("neuron weights")
+                    # print(neuron.weights)
 
                     # Calculate errors for the previous layer if it exists
                     if layer_idx > 0:
@@ -97,6 +124,7 @@ class NeuralNet:
 
                 if layer_idx > 0:
                     layer_errors = new_errors
+                # print(new_errors)
 
         mean_squared_error = np.mean(all_squared_errors)
         print("Mean Squared Error (Classification):", mean_squared_error)
@@ -139,5 +167,5 @@ class NeuralNet:
                     layer_errors = new_errors
 
         mean_squared_error = np.mean(all_squared_errors)
-        print("Mean Squared Error (Regression):", mean_squared_error)
+        print("Mean Squared Error (Regression):", mean_squared_error/100)
         return mean_squared_error
