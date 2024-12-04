@@ -13,8 +13,8 @@ def setup_preprocessing(data_path):
     return cleanedData, preProcessor
 
 def main():
-    #data_path = "data/breast-cancer-wisconsin.data"  # Classification data set 
-    data_path = "data/glass.data"  # Classification data set 
+    data_path = "data/breast-cancer-wisconsin.data"  # Classification data set 
+    #data_path = "data/glass.data"  # Classification data set 
     #data_path = "data/soybean-small.data"  # Classification data set 
 
     #data_path = "data/abalone.data"  # Regression data set 

@@ -55,7 +55,7 @@ class PSwarm:
                     GBest_error = error
 
                 # Update the particle's velocity and position
-                new_velocities, new_weights = PSwarm.update_position_and_velocity(PBest, GBest, velocities[i], particles[i].get_weights(),inertia_weight, Pbest_influence, Gbest_influence)
+                new_velocities, new_weights = PSwarm.update_position_and_velocity(PBest[i], GBest, velocities[i], particles[i].get_weights(),inertia_weight, Pbest_influence, Gbest_influence)
                 velocities[i] = new_velocities
                 particles[i].set_weights(new_weights)
 
@@ -75,9 +75,10 @@ class PSwarm:
         """
         new_velocity = []
         new_position = []
-
+       # print(position)
         # Iterate over layers
         for layer_idx, layer_weights in enumerate(position):
+            #print(PBest[layer_idx])
             layer_velocity = []
             layer_position = []
 
@@ -100,7 +101,6 @@ class PSwarm:
             # Append the new layer's velocity and position
             new_velocity.append(layer_velocity)
             new_position.append(layer_position)
-
         return new_velocity, new_position
     @staticmethod
     def evaluate_network(network, data, label_index, is_classification):

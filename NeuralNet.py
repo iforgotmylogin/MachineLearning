@@ -75,56 +75,56 @@ class NeuralNet:
     
     def set_weights(self, new_weights):
         """Set new weights for the entire network."""
-        assert len(new_weights) == len(self.layers), "Mismatch in number of layers"
-        
+
+        #print(new_weights)
         # Flatten the new weights into the structure of each layer
         index = 0
-        for layer in self.layers:
-            for neuron in layer:
-                num_weights = len(neuron.weights)  # Number of weights for this neuron
+        for i, layer in enumerate(self.layers):
+            for j, neuron in enumerate(layer):
                 # Reshape the new_weights to match the dimensions
-                neuron.weights = np.array(new_weights[index:index + num_weights])
-                index += num_weights
+                if new_weights[i][j].shape:  # Checks if the shape is not empty
+                    neuron.weights = new_weights[i][j]
+                else:
+                    print("Invalid weights shape detected!")
+                    # You can initialize with a default shape and values, e.g., zeroed array of appropriate size
+                    #neuron.weights = np.zeros_like(neuron.weights)  # Assuming neuron.weights has an appropriate shape
+
+
     def backProp_classification(self, results, label_index, data, initial_learning_rate=0.015, decay_rate=0.1, epoch=1, gradient_clip_value=0.5):
         learning_rate = initial_learning_rate * np.exp(-decay_rate * epoch)
         all_squared_errors = []
-        
-        num_layers = len(self.layers)
 
         for i, sample in enumerate(data):
             true_label = int(sample[label_index])  # Ensure true_label is an integer
-            expected = [0] * len(results[i])
+            output = results[i].flatten()  # Ensure the output is flat
+            expected = np.zeros_like(output)
             expected[true_label] = 1  # One-hot encoding for classification
-            
-            output = results[i]
-            squared_error = [(output_val - expected_val) ** 2 for output_val, expected_val in zip(output, expected)]
-            all_squared_errors.append(sum(squared_error))
+
+            squared_error = (output - expected) ** 2
+            all_squared_errors.append(np.sum(squared_error))
 
             # Calculate the derivative of the output error
             sample_derivative = np.clip((output - expected) * sigmoid_derivative(output), -gradient_clip_value, gradient_clip_value)
-            
+
             # Backpropagation
             layer_errors = sample_derivative
-            for layer_idx in range(num_layers - 1, -1, -1):
+            for layer_idx in range(len(self.layers) - 1, -1, -1):
                 layer = self.layers[layer_idx]
                 new_errors = np.zeros((len(self.layers[layer_idx - 1]),)) if layer_idx > 0 else None
 
                 for neuron_idx, neuron in enumerate(layer):
-                    gradient = np.clip(layer_errors[neuron_idx], -gradient_clip_value, gradient_clip_value)
+                    #print("Neuron weights shape:", neuron.weights.shape)
+
+                    gradient = layer_errors[neuron_idx]
                     neuron.weights -= learning_rate * gradient * neuron.inputs
                     neuron.bias -= learning_rate * gradient
-                    
-                    # print("neuron weights")
-                    # print(neuron.weights)
 
-                    # Calculate errors for the previous layer if it exists
-                    if layer_idx > 0:
+                    if layer_idx > 0:  # Backpropagate errors
                         for prev_neuron_idx in range(len(neuron.weights)):
                             new_errors[prev_neuron_idx] += gradient * neuron.weights[prev_neuron_idx]
 
                 if layer_idx > 0:
                     layer_errors = new_errors
-                # print(new_errors)
 
         mean_squared_error = np.mean(all_squared_errors)
         print("Mean Squared Error (Classification):", mean_squared_error)
