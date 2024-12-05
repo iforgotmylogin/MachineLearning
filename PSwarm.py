@@ -2,19 +2,9 @@ from NeuralNet import NeuralNet
 import random
 
 class PSwarm:
-    
-    def train_network(folds, num_output, label_index, is_classification):
-        Nparticles = 10
-        
-        global Pbest_influence
-        Pbest_influence = 0.8
 
-        global Gbest_influence 
-        Gbest_influence = 0.7
-
-        global inertia_weight
-        inertia_weight = 0.5
-
+    @staticmethod
+    def train_network(folds, num_output, label_index, is_classification, Nparticles=20, max_epochs=100, error_tolerance=1e-9, inertia_weight= 0.8, Pbest_influence=1.8, Gbest_influence=1.5):
         # Initialize particles, personal bests, and velocities
         particles = [None] * Nparticles
         PBest = [None] * Nparticles
@@ -28,17 +18,11 @@ class PSwarm:
             velocities[i] = [[random.uniform(-1, 1) for _ in neuron_weights] for neuron_weights in initial_weights]
             PBest[i] = particles[i].get_weights()
 
-
-        GBest = None  # Global best weights
         GBest = particles[0].get_weights()  # Use the first particle's weights as a template
         GBest_error = float('inf')
 
-
         epoch = 0
-        max_epochs = 250
-        error_tolerance = 1e-9
         
-
         while epoch < max_epochs:
             for i, particle in enumerate(particles):
                 # Evaluate the current particle
@@ -53,42 +37,57 @@ class PSwarm:
                 if error < GBest_error:
                     GBest = particle.get_weights()
                     GBest_error = error
+                    print(f"GBEST {GBest_error}")
 
                 # Update the particle's velocity and position
-                new_velocities, new_weights = PSwarm.update_position_and_velocity(PBest[i], GBest, velocities[i], particles[i].get_weights(),inertia_weight, Pbest_influence, Gbest_influence)
+                new_velocities, new_weights = PSwarm.update_position_and_velocity(
+                    PBest[i], GBest, velocities[i], particle.get_weights(),
+                    inertia_weight, Pbest_influence, Gbest_influence, epoch, max_epochs
+                )
                 velocities[i] = new_velocities
-                particles[i].set_weights(new_weights)
+                particle.set_weights(new_weights)
 
-            # Check convergence after all particles are updated
-            if abs(GBest_error) < error_tolerance:
+            # Check convergence across all particles
+            if all(abs(PBest_error[i] - GBest_error) < error_tolerance for i in range(Nparticles)):
+                print(f"Converged after {epoch} epochs.")
                 break
 
             epoch += 1
 
         print(f"Training completed in {epoch} epochs with a final error of {GBest_error:.6f}.")
-        return GBest, GBest_error
+        # After the training, create a new NeuralNet with the best weights
+        best_network = NeuralNet(folds, 2, 5, num_output)  # Make sure the architecture is consistent
+        best_network.set_weights(GBest)  # Set the best weights
+        return best_network, GBest_error  # Return the NeuralNet instance and error
 
     @staticmethod
-    def update_position_and_velocity(PBest, GBest, velocity, position, inertia_weight, Pbest_influence, Gbest_influence):
+    def update_position_and_velocity(PBest, GBest, velocity, position, inertia_weight, Pbest_influence, Gbest_influence, epoch, max_epochs):
         """
         Update the velocity and position of a particle.
         """
         new_velocity = []
         new_position = []
-       # print(position)
+
+        # Dynamically adjust the influence parameters based on epoch
+        w = inertia_weight * (1 - epoch / max_epochs)  # Decrease inertia over time
+        c1 = Pbest_influence * (epoch / max_epochs)  # Increase personal influence over time
+        c2 = Gbest_influence * (1 - epoch / max_epochs)  # Decrease global influence over time
+
         # Iterate over layers
         for layer_idx, layer_weights in enumerate(position):
-            #print(PBest[layer_idx])
             layer_velocity = []
             layer_position = []
 
             # Iterate over neurons in the current layer
             for neuron_idx, weight in enumerate(layer_weights):
-                # Calculate the new velocity for the weight
+                # Calculate the new velocity for the weight with added randomness
+                r1 = random.uniform(0.5, 1.5)  # Adjusted randomness for exploration
+                r2 = random.uniform(0.5, 1.5)
+
                 new_vel = (
-                    inertia_weight * velocity[layer_idx][neuron_idx] +  # inertia term
-                    Pbest_influence * (PBest[layer_idx][neuron_idx] - weight) +  # cognitive term
-                    Gbest_influence * (GBest[layer_idx][neuron_idx] - weight)  # social term
+                    w * velocity[layer_idx][neuron_idx] +  # inertia term
+                    c1 * r1 * (PBest[layer_idx][neuron_idx] - weight) +  # cognitive term
+                    c2 * r2 * (GBest[layer_idx][neuron_idx] - weight)  # social term
                 )
                 
                 # Append the calculated velocity for the current weight
@@ -101,7 +100,9 @@ class PSwarm:
             # Append the new layer's velocity and position
             new_velocity.append(layer_velocity)
             new_position.append(layer_position)
+
         return new_velocity, new_position
+
     @staticmethod
     def evaluate_network(network, data, label_index, is_classification):
         """
