@@ -1,10 +1,11 @@
+import numpy as np
 from NeuralNet import NeuralNet
 import random
 
 class PSwarm:
 
     @staticmethod
-    def train_network(folds, num_output, label_index, is_classification, Nparticles=20, max_epochs=100, error_tolerance=1e-9, inertia_weight= 0.8, Pbest_influence=1.8, Gbest_influence=1.5):
+    def train_network(folds, num_output, label_index, is_classification, Nparticles=20, max_epochs=20, error_tolerance=1e-9, inertia_weight= 0.9, Pbest_influence=1.8, Gbest_influence=1.5):
         # Initialize particles, personal bests, and velocities
         particles = [None] * Nparticles
         PBest = [None] * Nparticles
@@ -13,9 +14,9 @@ class PSwarm:
 
         # Initialize particles and velocities
         for i in range(Nparticles):
-            particles[i] = NeuralNet(folds, 2, 5, num_output)
+            particles[i] = NeuralNet(folds, 0, 5, num_output)
             initial_weights = particles[i].get_weights()
-            velocities[i] = [[random.uniform(-1, 1) for _ in neuron_weights] for neuron_weights in initial_weights]
+            velocities[i] = [[random.uniform(-.5, .5) for _ in neuron_weights] for neuron_weights in initial_weights]
             PBest[i] = particles[i].get_weights()
 
         GBest = particles[0].get_weights()  # Use the first particle's weights as a template
@@ -81,8 +82,8 @@ class PSwarm:
             # Iterate over neurons in the current layer
             for neuron_idx, weight in enumerate(layer_weights):
                 # Calculate the new velocity for the weight with added randomness
-                r1 = random.uniform(0.5, 1.5)  # Adjusted randomness for exploration
-                r2 = random.uniform(0.5, 1.5)
+                r1 = random.uniform(0, 1)  # Adjusted randomness for exploration
+                r2 = random.uniform(0, 1)
 
                 new_vel = (
                     w * velocity[layer_idx][neuron_idx] +  # inertia term
@@ -95,6 +96,8 @@ class PSwarm:
 
                 # Update the position (weights) of the particle based on the new velocity
                 new_weight = weight + new_vel  # new position is current weight + velocity
+                max_weight = 1  # Define as appropriate
+                new_weight = np.clip(weight + new_vel, -max_weight, max_weight)
                 layer_position.append(new_weight)
 
             # Append the new layer's velocity and position
@@ -104,15 +107,25 @@ class PSwarm:
         return new_velocity, new_position
 
     @staticmethod
-    def evaluate_network(network, data, label_index, is_classification):
+    def evaluate_network(network, data, label_index, is_classification, lambda_value=0.0000001):
         """
-        Evaluate the network's performance and return the error.
+        Evaluate the network's performance and return the error with L2 regularization.
         """
+        # Compute the original error
         if is_classification:
-            return network.backProp_classification(
+            original_error = network.backProp_classification(
                 network.feedforwardEpoch(data), label_index, data, epoch=1
             )
         else:
-            return network.backProp_regression(
+            original_error = network.backProp_regression(
                 network.feedforwardEpoch(data), label_index, data, epoch=1
             )
+
+        # Compute L2 regularization term
+        weights = network.get_weights()
+
+        # Sum the squared weights across all layers
+        l2_regularization = sum(np.sum(layer_weights**2) for layer_weights in weights)
+        # Add the regularization term to the original error
+        total_error = original_error + (lambda_value * l2_regularization)
+        return total_error
